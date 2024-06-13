@@ -5,65 +5,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GPT Diabetes Advisor</title>
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const player = { // Mocked GetPlayer function for the example
-                GetVar: (varName) => {
-                    if (varName === "Message_For_Colleague") return "I need advice on managing diabetes.";
-                    if (varName === "token") return "your-token-here";
-                    return "";
-                },
-                SetVar: (varName, value) => {
-                    console.log(`Setting ${varName} to ${value}`);
-                }
-            };
-
-            // You should change the following 3 variables. Make sure that the text is enclosed by quotation marks.
+        function sendRequest(userEntry, token) {
             const systemRequest = "You are a diabetes specialist consultant. I am going to write a sentence in response to the following prompt: 'Ask consultant for advice'. Once I respond, give me some basic advice.";
-            const userInputVariable = "Message_For_Colleague";
-            const aiOutputVariable = "gptresponse";
-
-            const userEntry = player.GetVar(userInputVariable);
-            const token = player.GetVar("token");
             const auth = "Bearer " + token;
 
-            console.log("Authorization:", auth); // Log the entire Authorization header
+            fetch("https://chatgpt.com/api/v1/chat/completions", {
+                method: 'POST',
+                headers: {
+                    'Authorization': auth,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    "model": "g-zFXlYyMJf-diabetes-advisor",
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": systemRequest
+                        },
+                        {
+                            "role": "user",
+                            "content": userEntry
+                        }
+                    ]
+                })
+            }).then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            }).then(data => {
+                console.log("Response Data:", data);
+                let aiText = data.choices[0].message.content;
+                window.parent.postMessage({ type: 'setVar', varName: 'gptresponse', value: aiText }, '*');
+            }).catch(error => {
+                console.log("Error: " + error);
+            });
+        }
 
-            function sendRequest() {
-                fetch("https://chatgpt.com/api/v1/chat/completions", {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': auth, // Ensure this matches your custom model's auth mechanism
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        "model": "g-zFXlYyMJf-diabetes-advisor", // Use your custom model ID
-                        "messages": [
-                            {
-                                "role": "system",
-                                "content": systemRequest
-                            },
-                            {
-                                "role": "user",
-                                "content": userEntry
-                            }
-                        ]
-                    })
-                }).then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    return response.json();
-                }).then(data => {
-                    console.log("Response Data:", data); // Log the response data
-                    let aiText = data.choices[0].message.content;
-                    player.SetVar(aiOutputVariable, aiText);
-                }).catch(error => {
-                    console.log("Error: " + error); // Log the error
-                });
+        window.addEventListener('message', function(event) {
+            if (event.data.type === 'sendRequest') {
+                sendRequest(event.data.userEntry, event.data.token);
             }
-
-            sendRequest();
-        });
+        }, false);
     </script>
 </head>
 <body>
