@@ -39,6 +39,7 @@
                 window.parent.postMessage({ type: 'setVar', varName: 'gptresponse', value: aiText }, '*');
             }).catch(error => {
                 console.log("Error: " + error);
+                window.parent.postMessage({ type: 'setVar', varName: 'gptresponse', value: 'Error: ' + error.message }, '*');
             });
         }
 
