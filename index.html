@@ -8,24 +8,35 @@
         let apiKey = '';
 
         async function sendMessage(userInput) {
-            const response = await fetch('https://api.openai.com/v1/engines/davinci-codex/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${apiKey}`
-                },
-                body: JSON.stringify({
-                    prompt: userInput,
-                    max_tokens: 150
-                })
-            });
+            try {
+                const response = await fetch('https://api.openai.com/v1/engines/davinci-codex/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        prompt: userInput,
+                        max_tokens: 150
+                    })
+                });
 
-            const data = await response.json();
-            const gptResponse = data.choices[0].text;
+                const data = await response.json();
+                
+                if (data.choices && data.choices.length > 0) {
+                    const gptResponse = data.choices[0].text;
 
-            const player = parent.GetPlayer();
-            player.SetVar("gptresponse", gptResponse);
-            document.getElementById('response').innerText = gptResponse;
+                    const player = parent.GetPlayer();
+                    player.SetVar("gptresponse", gptResponse);
+                    document.getElementById('response').innerText = gptResponse;
+                } else {
+                    console.error('Unexpected response structure:', data);
+                    document.getElementById('response').innerText = 'Error: Unexpected response structure';
+                }
+            } catch (error) {
+                console.error('Error during fetch:', error);
+                document.getElementById('response').innerText = 'Error: ' + error.message;
+            }
         }
 
         // Listen for messages from the parent (Storyline)
