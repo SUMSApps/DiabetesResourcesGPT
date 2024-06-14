@@ -3,32 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChatGPT Integration</title>
+    <title>Chat with OpenAI Assistant</title>
     <script>
-        // Listen for messages from the parent (Storyline)
-        window.addEventListener('message', async (event) => {
-            const userInput = event.data;
-            const response = await fetch('https://chatgpt.com/g/g-zFXlYyMJf-diabetes-advisor', {
+        async function sendMessage(userInput) {
+            const response = await fetch('https://api.openai.com/v1/engines/davinci-codex/completions', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer YOUR_OPENAI_API_KEY'
                 },
-                body: JSON.stringify({ prompt: userInput })
+                body: JSON.stringify({
+                    prompt: userInput,
+                    max_tokens: 150
+                })
             });
 
             const data = await response.json();
             const gptResponse = data.choices[0].text;
 
-            // Send the response back to Storyline
-            parent.postMessage(gptResponse, '*');
+            const player = parent.GetPlayer();
+            player.SetVar("gptresponse", gptResponse);
             document.getElementById('response').innerText = gptResponse;
+        }
+
+        // Listen for messages from the parent (Storyline)
+        window.addEventListener('message', (event) => {
+            const userInput = event.data;
+            sendMessage(userInput);
         });
     </script>
 </head>
 <body>
-    <h1>Chat with GPT</h1>
+    <h1>Chat with OpenAI Assistant</h1>
     <textarea id="userInput" rows="4" cols="50" placeholder="Enter your message here..."></textarea><br>
-    <button onclick="sendMessage()">Send Message</button>
+    <button onclick="sendMessage(document.getElementById('userInput').value)">Send Message</button>
     <h2>Response:</h2>
     <p id="response"></p>
 </body>
