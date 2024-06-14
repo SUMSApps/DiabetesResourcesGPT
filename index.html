@@ -5,12 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat with OpenAI Assistant</title>
     <script>
+        let apiKey = '';
+
         async function sendMessage(userInput) {
             const response = await fetch('https://api.openai.com/v1/engines/davinci-codex/completions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer sk-proj-Po4HyCesy68O3wfSjMNhT3BlbkFJlJdX5pR4xS44fK7DbFVJ'
+                    'Authorization': `Bearer ${apiKey}`
                 },
                 body: JSON.stringify({
                     prompt: userInput,
@@ -28,8 +30,12 @@
 
         // Listen for messages from the parent (Storyline)
         window.addEventListener('message', (event) => {
-            const userInput = event.data;
-            sendMessage(userInput);
+            if (event.data.type === 'apiKey') {
+                apiKey = event.data.value;
+            } else if (event.data.type === 'userInput') {
+                const userInput = event.data.value;
+                sendMessage(userInput);
+            }
         });
     </script>
 </head>
