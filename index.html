@@ -5,10 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChatGPT Integration</title>
     <script>
-        async function sendMessage() {
-            const player = parent.GetPlayer();
-            const userInput = document.getElementById('userInput').value;
-
+        // Listen for messages from the parent (Storyline)
+        window.addEventListener('message', async (event) => {
+            const userInput = event.data;
             const response = await fetch('https://chatgpt.com/g/g-zFXlYyMJf-diabetes-advisor', {
                 method: 'POST',
                 headers: {
@@ -20,11 +19,10 @@
             const data = await response.json();
             const gptResponse = data.choices[0].text;
 
-            player.SetVar("Message_to_Colleague", userInput);
-            player.SetVar("gptresponse", gptResponse);
-
+            // Send the response back to Storyline
+            parent.postMessage(gptResponse, '*');
             document.getElementById('response').innerText = gptResponse;
-        }
+        });
     </script>
 </head>
 <body>
